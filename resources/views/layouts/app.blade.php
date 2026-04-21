@@ -100,6 +100,7 @@
 
             <!-- Page Content -->
             <main class="p-4">
+                <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
                 @yield('content')
             </main>
         </div>

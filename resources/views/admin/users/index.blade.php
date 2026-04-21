@@ -208,19 +208,36 @@ document.getElementById('userForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
-            location.reload();
+            showToast('success', data.message || 'Operation successful');
+            setTimeout(() => location.reload(), 1500);
         } else if (data.errors) {
             let errorMsg = '';
             for (const [key, value] of Object.entries(data.errors)) {
                 errorMsg += value[0] + '\n';
             }
-            alert(errorMsg);
+            showToast('danger', errorMsg);
         }
     })
     .catch(error => {
-        alert('An error occurred. Please try again.');
+        showToast('danger', 'An error occurred. Please try again.');
     });
 });
+
+function showToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.getElementById('toastContainer').appendChild(toast);
+    new bootstrap.Toast(toast).show();
+}
 </script>
 @endpush
 @endsection
