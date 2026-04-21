@@ -6,7 +6,7 @@
         <div>
             <h4 class="mb-0">User Management</h4>
         </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="openUserModal()">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" id="btnAddUser">
             <i class="bi bi-person-plus me-2"></i>Add User
         </button>
     </div>
@@ -39,15 +39,20 @@
                             <td>{{ $user->created_at->format('M d, Y') }}</td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal" 
-                                        data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-email="{{ $user->email }}" data-created="{{ $user->created_at }}">
+                                    <button class="btn btn-sm btn-outline-info btn-view" 
+                                        data-id="{{ $user->id }}" 
+                                        data-name="{{ $user->name }}" 
+                                        data-email="{{ $user->email }}" 
+                                        data-created="{{ $user->created_at }}">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#userModal" 
-                                        data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-email="{{ $user->email }}">
+                                    <button class="btn btn-sm btn-outline-secondary btn-edit" 
+                                        data-id="{{ $user->id }}" 
+                                        data-name="{{ $user->name }}" 
+                                        data-email="{{ $user->email }}">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')">
+                                    <button class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ $user->id }}" data-name="{{ $user->name }}">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -137,7 +142,7 @@
 
 @push('scripts')
 <script>
-function openUserModal() {
+document.getElementById('btnAddUser').addEventListener('click', function() {
     document.getElementById('userModalTitle').textContent = 'Create User';
     document.getElementById('userForm').action = '{{ route("admin.users.store") }}';
     document.getElementById('formMethod').value = 'POST';
@@ -149,39 +154,78 @@ function openUserModal() {
     document.getElementById('passwordFields').style.display = 'block';
     document.getElementById('passwordConfirmFields').style.display = 'block';
     document.getElementById('modalPassword').required = true;
-}
+});
 
-document.querySelectorAll('[data-bs-target="#userModal"]').forEach(button => {
-    button.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        const name = this.getAttribute('data-name');
-        const email = this.getAttribute('data-email');
+document.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+        const email = this.dataset.email;
         
-        if (id) {
-            document.getElementById('userModalTitle').textContent = 'Edit User';
-            document.getElementById('userForm').action = '/admin/users/' + id;
-            document.getElementById('formMethod').value = 'PUT';
-            document.getElementById('submitBtn').textContent = 'Update';
-            document.getElementById('modalName').value = name;
-            document.getElementById('modalEmail').value = email;
-            document.getElementById('modalPassword').value = '';
-            document.getElementById('modalPasswordConfirmation').value = '';
-            document.getElementById('passwordFields').style.display = 'none';
-            document.getElementById('passwordConfirmFields').style.display = 'none';
-            document.getElementById('modalPassword').required = false;
-        } else {
-            openUserModal();
-        }
+        document.getElementById('userModalTitle').textContent = 'Edit User';
+        document.getElementById('userForm').action = '/admin/users/' + id;
+        document.getElementById('formMethod').value = 'PUT';
+        document.getElementById('submitBtn').textContent = 'Update';
+        document.getElementById('modalName').value = name;
+        document.getElementById('modalEmail').value = email;
+        document.getElementById('modalPassword').value = '';
+        document.getElementById('modalPasswordConfirmation').value = '';
+        document.getElementById('passwordFields').style.display = 'none';
+        document.getElementById('passwordConfirmFields').style.display = 'none';
+        document.getElementById('modalPassword').required = false;
+        
+        var modal = new bootstrap.Modal(document.getElementById('userModal'));
+        modal.show();
     });
 });
 
-document.querySelectorAll('[data-bs-target="#viewUserModal"]').forEach(button => {
-    button.addEventListener('click', function() {
-        document.getElementById('viewId').textContent = this.getAttribute('data-id');
-        document.getElementById('viewName').textContent = this.getAttribute('data-name');
-        document.getElementById('viewEmail').textContent = this.getAttribute('data-email');
-        document.getElementById('viewAvatar').textContent = this.getAttribute('data-name').charAt(0).toUpperCase();
-        document.getElementById('viewCreated').textContent = this.getAttribute('data-created');
+document.querySelectorAll('.btn-view').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = this.dataset.id || '-';
+        const name = this.dataset.name || '-';
+        const email = this.dataset.email || '-';
+        const created = this.dataset.created || '-';
+        
+        document.getElementById('viewId').textContent = id;
+        document.getElementById('viewName').textContent = name;
+        document.getElementById('viewEmail').textContent = email;
+        document.getElementById('viewAvatar').textContent = name.charAt(0).toUpperCase();
+        document.getElementById('viewCreated').textContent = created;
+        
+        var modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+        modal.show();
+    });
+});
+
+document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const id = this.dataset.id;
+        const name = this.dataset.name;
+        
+        if (confirm('Are you sure you want to delete user "' + name + '"?')) {
+            fetch('/admin/users/' + id, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message || 'User deleted successfully');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('danger', data.message || 'Failed to delete user');
+                }
+            })
+            .catch(error => {
+                showToast('danger', 'An error occurred. Please try again.');
+            });
+        }
     });
 });
 
@@ -197,7 +241,8 @@ document.getElementById('userForm').addEventListener('submit', function(e) {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
         }
     })
     .then(response => response.json())
@@ -233,30 +278,6 @@ function showToast(type, message) {
     `;
     document.getElementById('toastContainer').appendChild(toast);
     new bootstrap.Toast(toast).show();
-}
-
-function deleteUser(id, name) {
-    if (confirm(`Are you sure you want to delete user "${name}"?`)) {
-        fetch(`/admin/users/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('success', data.message || 'User deleted successfully');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showToast('danger', data.message || 'Failed to delete user');
-            }
-        })
-        .catch(error => {
-            showToast('danger', 'An error occurred. Please try again.');
-        });
-    }
 }
 </script>
 @endpush
