@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<?php use Illuminate\Support\Facades\DB; ?>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -43,6 +44,9 @@
                 </li>
             </ul>
             <hr>
+            <div class="text-center text-muted small mt-2">
+                <i class="bi bi-code-square me-1"></i>v{{ DB::table('app_versions')->latest()->first()?->version ?? '1.0.1.1' }}
+            </div>
             <div class="dropdown">
                 <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="avatar me-2">

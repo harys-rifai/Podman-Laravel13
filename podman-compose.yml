@@ -3,12 +3,12 @@ services:
   laravel:
     build: .
     container_name: nextwave
-    working_dir: /var/www/html/nextwave
+    working_dir: /var/www/html
     command: php artisan serve --host=0.0.0.0 --port=808
     ports:
       - "808:808"
     volumes:
-      - ./nextwave:/var/www/html/nextwave
+      - .:/var/www/html
     depends_on:
       - redis
       - postgres
