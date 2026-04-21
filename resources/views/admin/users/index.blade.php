@@ -47,13 +47,9 @@
                                         data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-email="{{ $user->email }}">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -124,11 +120,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <p class="mb-1"><strong>User ID:</strong></p>
-                        <p class="text-muted" id="viewId"></p>
+                        <p class="text-muted" id="viewId">-</p>
                     </div>
                     <div class="col-md-6">
                         <p class="mb-1"><strong>Created:</strong></p>
-                        <p class="text-muted" id="viewCreated"></p>
+                        <p class="text-muted" id="viewCreated">-</p>
                     </div>
                 </div>
             </div>
@@ -237,6 +233,30 @@ function showToast(type, message) {
     `;
     document.getElementById('toastContainer').appendChild(toast);
     new bootstrap.Toast(toast).show();
+}
+
+function deleteUser(id, name) {
+    if (confirm(`Are you sure you want to delete user "${name}"?`)) {
+        fetch(`/admin/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', data.message || 'User deleted successfully');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('danger', data.message || 'Failed to delete user');
+            }
+        })
+        .catch(error => {
+            showToast('danger', 'An error occurred. Please try again.');
+        });
+    }
 }
 </script>
 @endpush
