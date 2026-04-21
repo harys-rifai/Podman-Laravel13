@@ -39,10 +39,12 @@
                             <td>{{ $user->created_at->format('M d, Y') }}</td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal" onclick="viewUser({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}', '{{ $user->created_at }}')">
+                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal" 
+                                        data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-email="{{ $user->email }}" data-created="{{ $user->created_at }}">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="editUser({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')">
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#userModal" 
+                                        data-id="{{ $user->id }}" data-name="{{ $user->name }}" data-email="{{ $user->email }}">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="d-inline">
@@ -153,27 +155,39 @@ function openUserModal() {
     document.getElementById('modalPassword').required = true;
 }
 
-function editUser(id, name, email) {
-    document.getElementById('userModalTitle').textContent = 'Edit User';
-    document.getElementById('userForm').action = '/admin/users/' + id;
-    document.getElementById('formMethod').value = 'PUT';
-    document.getElementById('submitBtn').textContent = 'Update';
-    document.getElementById('modalName').value = name;
-    document.getElementById('modalEmail').value = email;
-    document.getElementById('modalPassword').value = '';
-    document.getElementById('modalPasswordConfirmation').value = '';
-    document.getElementById('passwordFields').style.display = 'none';
-    document.getElementById('passwordConfirmFields').style.display = 'none';
-    document.getElementById('modalPassword').required = false;
-}
+document.querySelectorAll('[data-bs-target="#userModal"]').forEach(button => {
+    button.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        const name = this.getAttribute('data-name');
+        const email = this.getAttribute('data-email');
+        
+        if (id) {
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            document.getElementById('userForm').action = '/admin/users/' + id;
+            document.getElementById('formMethod').value = 'PUT';
+            document.getElementById('submitBtn').textContent = 'Update';
+            document.getElementById('modalName').value = name;
+            document.getElementById('modalEmail').value = email;
+            document.getElementById('modalPassword').value = '';
+            document.getElementById('modalPasswordConfirmation').value = '';
+            document.getElementById('passwordFields').style.display = 'none';
+            document.getElementById('passwordConfirmFields').style.display = 'none';
+            document.getElementById('modalPassword').required = false;
+        } else {
+            openUserModal();
+        }
+    });
+});
 
-function viewUser(id, name, email, created) {
-    document.getElementById('viewId').textContent = id;
-    document.getElementById('viewName').textContent = name;
-    document.getElementById('viewEmail').textContent = email;
-    document.getElementById('viewAvatar').textContent = name.charAt(0).toUpperCase();
-    document.getElementById('viewCreated').textContent = created;
-}
+document.querySelectorAll('[data-bs-target="#viewUserModal"]').forEach(button => {
+    button.addEventListener('click', function() {
+        document.getElementById('viewId').textContent = this.getAttribute('data-id');
+        document.getElementById('viewName').textContent = this.getAttribute('data-name');
+        document.getElementById('viewEmail').textContent = this.getAttribute('data-email');
+        document.getElementById('viewAvatar').textContent = this.getAttribute('data-name').charAt(0).toUpperCase();
+        document.getElementById('viewCreated').textContent = this.getAttribute('data-created');
+    });
+});
 
 document.getElementById('userForm').addEventListener('submit', function(e) {
     e.preventDefault();
