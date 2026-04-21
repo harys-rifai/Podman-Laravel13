@@ -36,12 +36,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
-    }
-
-    public function edit(User $user)
-    {
-        return view('admin.users.edit', compact('user'));
+        return response()->json(['success' => true, 'message' => 'User created successfully.']);
     }
 
     public function update(Request $request, User $user)
@@ -53,7 +48,7 @@ class UserController extends Controller
 
         $user->update($request->only('name', 'email'));
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+        return response()->json(['success' => true, 'message' => 'User updated successfully.']);
     }
 
     public function destroy(User $user)
